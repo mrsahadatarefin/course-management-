@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { ReviewModel } from '../Review/review.model';
 import { TCourse } from './course.interface';
 import CourseModel from './course.modal';
@@ -53,10 +54,23 @@ const AllCourseFromDb = async (query: Record<string, unknown>) => {
 
   return limitQuery;
 };
-const getReviewByCourseIdIntoDB = async (course: string) => {
-  const result = await ReviewModel.find({
-    course,
-  }).populate('course');
+const getReviewByCourseIdIntoDB = async (id: string) => {
+  const courseId = new mongoose.Types.ObjectId(id);
+
+  const result = await CourseModel.aggregate([
+    {
+      $match: { _id: courseId },
+    },
+
+    {
+      $lookup: {
+        from: 'reviews',
+        localField: '_id',
+        foreignField: 'courseId',
+        as: 'reviews',
+      },
+    },
+  ]);
 
   return result;
 };

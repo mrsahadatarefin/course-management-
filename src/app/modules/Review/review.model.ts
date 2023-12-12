@@ -2,7 +2,7 @@ import { Schema, model } from 'mongoose';
 import { TReview } from './review.interface';
 
 const reviewSchema = new Schema<TReview>({
-  course: {
+  courseId: {
     type: Schema.Types.ObjectId,
     ref: 'Course',
   },
