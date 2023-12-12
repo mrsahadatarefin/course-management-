@@ -34,7 +34,7 @@ const courseSchema = new Schema<TCourse>({
 courseSchema.pre('save', function (next) {
   const startDate = new Date(this.startDate);
   const endDate = new Date(this.endDate);
-  const durationInMilliseconds = endDate - startDate;
+  const durationInMilliseconds = endDate.getTime() - startDate.getTime();
   const durationInWeeksFIND =
     durationInMilliseconds / (7 * 24 * 60 * 60 * 1000);
 

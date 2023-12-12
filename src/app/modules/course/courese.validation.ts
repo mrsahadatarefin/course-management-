@@ -5,8 +5,8 @@ const TagsValidationSchema = z.object({
   isDeleted: z.boolean(),
 });
 const DetailsValidationSchema = z.object({
-  level: z.string(),
-  description: z.string(),
+  level: z.string().optional(),
+  description: z.string().optional(),
 });
 export const createCourseValidationSchema = z.object({
   body: z.object({
@@ -28,7 +28,7 @@ export const updateCourseValidationSchema = z.object({
     title: z.string().optional(),
     instructor: z.string().optional(),
     categoryId: z.string().optional(),
-    price: z.string().optional(),
+    price: z.number().optional(),
     tags: z.array(TagsValidationSchema).optional(),
     startDate: z.string().optional(),
     endDate: z.string().optional(),
