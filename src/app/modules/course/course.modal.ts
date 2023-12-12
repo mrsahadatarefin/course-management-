@@ -31,5 +31,16 @@ const courseSchema = new Schema<TCourse>({
     description: { type: String, required: true },
   },
 });
+courseSchema.pre('save', function (next) {
+  const startDate = new Date(this.startDate);
+  const endDate = new Date(this.endDate);
+  const durationInMilliseconds = endDate - startDate;
+  const durationInWeeksFIND =
+    durationInMilliseconds / (7 * 24 * 60 * 60 * 1000);
+
+  this.durationInWeeks = Math.ceil(durationInWeeksFIND);
+
+  next();
+});
 const CourseModel = model<TCourse>('Course', courseSchema);
 export default CourseModel;

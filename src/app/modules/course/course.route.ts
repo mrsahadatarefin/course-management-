@@ -9,5 +9,6 @@ route.post(
   validateRequest(createCourseValidationSchema),
   courseController.createCourse,
 );
+route.get('/:courseId/reviews', courseController.getReviewByCourseId);
 
 export const courseRoute = route;

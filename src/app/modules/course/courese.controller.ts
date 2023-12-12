@@ -15,6 +15,19 @@ const createCourse = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+const getReviewByCourseId = catchAsync(async (req: Request, res: Response) => {
+  const { courseId } = req.params;
+  console.log(courseId);
+  const result = await courseService.getReviewByCourseIdIntoDB(courseId);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Course and Reviews retrieved successfully',
+    data: result,
+  });
+});
+
 export const courseController = {
   createCourse,
+  getReviewByCourseId,
 };
