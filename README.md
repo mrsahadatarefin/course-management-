@@ -9,13 +9,12 @@ if user want to add rivew they can add and create course ,they can find course b
 npm install how to naviget this application go to the module follow the route file
 
 ### Api endpoint 
-##get course 
+###get course 
 :https://mongoss-course-review.vercel.app/api/courses
-## create course:/api/coures
-##updateCoures:/api.course
-##creare category 
-## get:api/categories
-##creare- categories:api/sategories
-##crearte reviews: api/reivews
-##get review by courseId:api/courses/course/reivew
+### create course:/api/coures
+###updateCoures:/api.course
+###creare category 
+### get:api/categories
+###crearte reviews: api/reivews
+###get review by courseId:api/courses/course/reivew
 
