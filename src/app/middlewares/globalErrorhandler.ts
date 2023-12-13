@@ -16,14 +16,14 @@ export const globalErrorHandler: ErrorRequestHandler = (
 ) => {
   let statusCode = 500;
   let message = err.message || 'Something went wrong!';
-  let errorMessage = '';
+
   let errorDetails = {};
 
   if (err instanceof ZodError) {
     const simplifiedError = handleZodError(err);
     statusCode = simplifiedError.statusCode;
     message = simplifiedError.message;
-    errorMessage = simplifiedError.errorMessage;
+
     errorDetails = simplifiedError.errorDetails;
   } else if (err?.code === 11000) {
     const simplifiedError = handleDuplicateError(err);
@@ -40,10 +40,8 @@ export const globalErrorHandler: ErrorRequestHandler = (
   return res.status(statusCode).json({
     success: false,
     message,
-    errorMessage,
     errorDetails: err,
     err: err.name,
-
     stack: err?.stack,
   });
 };

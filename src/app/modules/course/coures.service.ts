@@ -29,6 +29,7 @@ const AllCourseFromDb = async (query: Record<string, unknown>) => {
     'maxPrice',
   ];
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data: any[] = [];
 
   const searchExpressions = courseSearchableFields.map((field) => ({
@@ -43,7 +44,7 @@ const AllCourseFromDb = async (query: Record<string, unknown>) => {
   }
 
   if (query.minPrice || query.maxPrice) {
-    const priceQuery: any = {};
+    const priceQuery: Record<string, unknown> = {};
     if (query.minPrice) {
       priceQuery.$gte = parseFloat(query.minPrice as string);
     }
@@ -61,7 +62,6 @@ const AllCourseFromDb = async (query: Record<string, unknown>) => {
 
   let page = 1;
   let limit = 10;
-  let total = 0;
 
   if (query.limit) {
     limit = Number(query.limit);
