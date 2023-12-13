@@ -13,6 +13,7 @@ route.post(
   courseController.createCourse,
 );
 route.get('/', courseController.AllCourse);
+route.get('/best', courseController.getCourseByBestRating);
 route.get('/:courseId/reviews', courseController.getReviewByCourseId);
 route.put(
   '/:courseId',

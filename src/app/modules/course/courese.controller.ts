@@ -28,7 +28,6 @@ const AllCourse = catchAsync(async (req: Request, res: Response) => {
 });
 const getReviewByCourseId = catchAsync(async (req: Request, res: Response) => {
   const { courseId } = req.params;
-  console.log(courseId);
   const result = await courseService.getReviewByCourseIdIntoDB(courseId);
   sendResponse(res, {
     statusCode: 200,
@@ -37,6 +36,18 @@ const getReviewByCourseId = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
+const getCourseByBestRating = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await courseService.getBestCorseFromDb();
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'Course updated successfully',
+      data: result,
+    });
+  },
+);
 const updateCourse = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const body = req.body;
@@ -54,4 +65,5 @@ export const courseController = {
   getReviewByCourseId,
   updateCourse,
   AllCourse,
+  getCourseByBestRating,
 };

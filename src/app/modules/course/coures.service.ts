@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import { ReviewModel } from '../Review/review.model';
 import { TCourse } from './course.interface';
 import CourseModel from './course.modal';
 
@@ -18,6 +17,10 @@ const AllCourseFromDb = async (query: Record<string, unknown>) => {
     'language',
     'provider',
     'details.level',
+    'minPrice',
+    'maxPrice',
+    'minPrice',
+    'maxPrice',
   ];
   let searchTerm = '';
   if (query?.searchTerm) {
@@ -30,7 +33,16 @@ const AllCourseFromDb = async (query: Record<string, unknown>) => {
     })),
   });
 
-  const excludeFields = ['searchTerm', 'sort', 'page', 'limit', 'skip'];
+  const excludeFields = [
+    'searchTerm',
+    'sort',
+    'page',
+    'limit',
+    'skip',
+    'minPrice',
+    'maxPrice',
+  ];
+
   excludeFields.forEach((el) => delete queryObj[el]);
   const filterQuery = searchQuery.find(queryObj);
   let sort = '-createAt';
@@ -74,6 +86,40 @@ const getReviewByCourseIdIntoDB = async (id: string) => {
 
   return result;
 };
+const getBestCorseFromDb = async () => {
+  const minimumAverageRating = 2;
+  const result = await CourseModel.aggregate([
+    {
+      $lookup: {
+        from: 'reviews',
+        localField: '_id',
+        foreignField: 'courseId',
+        as: 'reviews',
+      },
+    },
+    {
+      $addFields: {
+        averageRating: {
+          $avg: '$reviews.rating',
+        },
+      },
+    },
+    {
+      $match: {
+        averageRating: { $gt: minimumAverageRating },
+      },
+    },
+
+    {
+      $addFields: {
+        reviewCount: { $size: '$reviews' },
+      },
+    },
+
+    { $project: { reviews: 0, __v: 0 } },
+  ]);
+  return result;
+};
 
 const updateCourseIntoDB = async (id: string, payload: Partial<TCourse>) => {
   const { tags, details, ...data } = payload;
@@ -85,22 +131,31 @@ const updateCourseIntoDB = async (id: string, payload: Partial<TCourse>) => {
       modifiedUpdateData[`details.${key}`] = value;
     }
   }
-  if (tags && tags.length) {
-    const deleteTags = tags
-      .filter((el) => el.name && el.isDeleted)
-      .map((el) => el.name);
-    const deleteTag = await CourseModel.findByIdAndUpdate(id, {
-      $pull: { tags: { $in: deleteTags } },
+
+  if (tags && Array.isArray(tags)) {
+    const updatedTags = tags.map((tag: Record<string, unknown>) => {
+      if (tag.isDeleted) {
+        return null;
+      }
+      return {
+        name: tag.name,
+        isDeleted: tag.isDeleted || false,
+      };
     });
-    const newTags = tags?.filter((el) => el.name && !el.isDeleted);
-    const newFilterTags = await CourseModel.findByIdAndUpdate(id, {
-      $addToSet: { tags: { $each: newTags } },
+
+    const filteredTags = updatedTags.filter((tag) => tag !== null);
+
+    modifiedUpdateData.tags = filteredTags;
+
+    await CourseModel.findByIdAndUpdate(id, {
+      $pull: { tags: { isDeleted: true } },
     });
   }
-
   const result = await CourseModel.findOneAndUpdate(
     { id },
-    modifiedUpdateData,
+    {
+      $set: modifiedUpdateData,
+    },
     { new: true, runValidators: true },
   );
   return result;
@@ -111,4 +166,5 @@ export const courseService = {
   getReviewByCourseIdIntoDB,
   updateCourseIntoDB,
   AllCourseFromDb,
+  getBestCorseFromDb,
 };
