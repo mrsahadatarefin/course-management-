@@ -1,15 +1,18 @@
 import mongoose from 'mongoose';
 
 export const handleCastError = (err: mongoose.Error.CastError) => {
-  const errorDetails = {
-    err,
-  };
+  const errorDetails = [
+    {
+      path: err.path,
+      message: err.message,
+    },
+  ];
 
   const statusCode = 400;
+
   return {
     statusCode,
-    message: 'Validation Error',
-    errorMessage,
+    message: 'Invalid ID',
     errorDetails,
   };
 };
