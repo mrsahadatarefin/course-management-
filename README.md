@@ -11,7 +11,8 @@ npm install how to naviget this application go to the module follow the route fi
 #Api endpoint 
 ###get course 
 :https://mongoss-course-review.vercel.app/api/courses
-### create course:/api/coures
+### create course:/api/coures.
+
 ###updateCoures:/api.course
 ###creare category 
 ### get:api/categories
