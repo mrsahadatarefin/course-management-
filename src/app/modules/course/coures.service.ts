@@ -17,21 +17,7 @@ const AllCourseFromDb = async (query: Record<string, unknown>) => {
     'language',
     'provider',
     'details.level',
-    'minPrice',
-    'maxPrice',
-    'minPrice',
-    'maxPrice',
   ];
-  let searchTerm = '';
-  if (query?.searchTerm) {
-    searchTerm = query?.searchTerm as string;
-  }
-
-  const searchQuery = CourseModel.find({
-    $or: courseSearchableFields.map((field) => ({
-      [field]: { $regex: searchTerm, $options: 'i' },
-    })),
-  });
 
   const excludeFields = [
     'searchTerm',
@@ -43,28 +29,70 @@ const AllCourseFromDb = async (query: Record<string, unknown>) => {
     'maxPrice',
   ];
 
+  const data: any[] = [];
+
+  const searchExpressions = courseSearchableFields.map((field) => ({
+    [field]: { $regex: query?.searchTerm || '', $options: 'i' },
+  }));
+  data.push({ $match: { $or: searchExpressions } });
+
   excludeFields.forEach((el) => delete queryObj[el]);
-  const filterQuery = searchQuery.find(queryObj);
+
+  if (Object.keys(queryObj).length > 0) {
+    data.push({ $match: queryObj });
+  }
+
+  if (query.minPrice || query.maxPrice) {
+    const priceQuery: any = {};
+    if (query.minPrice) {
+      priceQuery.$gte = parseFloat(query.minPrice as string);
+    }
+    if (query.maxPrice) {
+      priceQuery.$lte = parseFloat(query.maxPrice as string);
+    }
+    data.push({ $match: { price: priceQuery } });
+  }
+
   let sort = '-createAt';
   if (query.sort) {
     sort = query.sort as string;
   }
-  const sortQuery = filterQuery.sort(sort);
+  data.push({ $sort: { [sort]: 1 } });
+
   let page = 1;
-  let limit = 1;
-  let skip = 0;
+  let limit = 10;
+  let total = 0;
+
   if (query.limit) {
     limit = Number(query.limit);
   }
   if (query.page) {
     page = Number(query.page);
-    skip = (page - 1) * limit;
   }
-  const paginateQuery = sortQuery.skip(skip);
 
-  const limitQuery = paginateQuery.limit(limit);
+  const skip = (page - 1) * limit;
+  data.push({ $skip: skip }, { $limit: limit });
 
-  return limitQuery;
+  const countdata = [...data];
+  countdata.push({ $count: 'total' });
+
+  const [courses, totalResult] = await Promise.all([
+    CourseModel.aggregate(data),
+    CourseModel.aggregate(countdata),
+  ]);
+
+  const totalDocuments = totalResult.length > 0 ? totalResult[0].total : 0;
+
+  const result = {
+    meta: {
+      page,
+      limit,
+      total: totalDocuments,
+    },
+    data: courses,
+  };
+
+  return result;
 };
 const getReviewByCourseIdIntoDB = async (id: string) => {
   const courseId = new mongoose.Types.ObjectId(id);
