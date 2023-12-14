@@ -1,99 +1,97 @@
 import mongoose from 'mongoose';
-import { TCourse } from './course.interface';
+import { QueryParams, TCourse } from './course.interface';
 import CourseModel from './course.modal';
+import { ReviewModel } from '../Review/review.model';
 
 const createCourseIntoDb = async (payload: TCourse) => {
   const result = await CourseModel.create(payload);
   return result;
 };
 
-const AllCourseFromDb = async (query: Record<string, unknown>) => {
-  const queryObj = { ...query };
-  const courseSearchableFields = [
-    'title',
-    'tags.name',
-    'startDate',
-    'endDate',
-    'language',
-    'provider',
-    'details.level',
-  ];
-
-  const excludeFields = [
-    'searchTerm',
-    'sort',
-    'page',
-    'limit',
-    'skip',
-    'minPrice',
-    'maxPrice',
-  ];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const AllCourseFromDb = async (queryParams: QueryParams) => {
+  const {
+    page = 1,
+    limit = 10,
+    sortBy,
+    sortOrder = 'asc',
+    minPrice,
+    maxPrice,
+    tags,
+    startDate,
+    endDate,
+    language,
+    provider,
+    durationInWeeks,
+    level,
+  } = queryParams;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const data: any[] = [];
+  const matchCriteria: Record<string, any> = {};
 
-  const searchExpressions = courseSearchableFields.map((field) => ({
-    [field]: { $regex: query?.searchTerm || '', $options: 'i' },
-  }));
-  data.push({ $match: { $or: searchExpressions } });
-
-  excludeFields.forEach((el) => delete queryObj[el]);
-
-  if (Object.keys(queryObj).length > 0) {
-    data.push({ $match: queryObj });
+  if (minPrice !== undefined || maxPrice !== undefined) {
+    matchCriteria.price = {};
+    if (minPrice !== undefined) matchCriteria.price.$gte = minPrice;
+    if (maxPrice !== undefined) matchCriteria.price.$lte = maxPrice;
   }
 
-  if (query.minPrice || query.maxPrice) {
-    const priceQuery: Record<string, unknown> = {};
-    if (query.minPrice) {
-      priceQuery.$gte = parseFloat(query.minPrice as string);
-    }
-    if (query.maxPrice) {
-      priceQuery.$lte = parseFloat(query.maxPrice as string);
-    }
-    data.push({ $match: { price: priceQuery } });
+  if (tags !== undefined) {
+    matchCriteria['tags.name'] = tags;
   }
 
-  let sort = '-createAt';
-  if (query.sort) {
-    sort = query.sort as string;
-  }
-  data.push({ $sort: { [sort]: 1 } });
-
-  let page = 1;
-  let limit = 10;
-
-  if (query.limit) {
-    limit = Number(query.limit);
-  }
-  if (query.page) {
-    page = Number(query.page);
+  if (startDate !== undefined || endDate !== undefined) {
+    matchCriteria.startDate = {};
+    if (startDate !== undefined) matchCriteria.startDate.$gte = startDate;
+    if (endDate !== undefined) matchCriteria.startDate.$lte = endDate;
   }
 
-  const skip = (page - 1) * limit;
-  data.push({ $skip: skip }, { $limit: limit });
+  if (language !== undefined) {
+    matchCriteria.language = language;
+  }
 
-  const countdata = [...data];
-  countdata.push({ $count: 'total' });
+  if (provider !== undefined) {
+    matchCriteria.provider = provider;
+  }
 
-  const [courses, totalResult] = await Promise.all([
-    CourseModel.aggregate(data),
-    CourseModel.aggregate(countdata),
-  ]);
+  if (durationInWeeks !== undefined && durationInWeeks !== null) {
+    matchCriteria.durationInWeeks = durationInWeeks;
+  }
 
-  const totalDocuments = totalResult.length > 0 ? totalResult[0].total : 0;
+  if (level !== undefined) {
+    matchCriteria['details.level'] = level;
+  }
 
-  const result = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sortCriteria: Record<string, any> = {};
+  if (sortBy) {
+    sortCriteria[sortBy] = sortOrder === 'desc' ? -1 : 1;
+  }
+
+  const totalCount = await CourseModel.countDocuments(matchCriteria).exec();
+
+  const query = CourseModel.find(matchCriteria);
+
+  if (Object.keys(sortCriteria).length > 0) {
+    query.sort(sortCriteria);
+  }
+
+  const result = await query
+    .skip((page - 1) * limit)
+    .limit(limit)
+    .exec();
+
+  const response = {
     meta: {
       page,
       limit,
-      total: totalDocuments,
+      total: totalCount,
     },
-    data: courses,
+    data: result,
   };
 
-  return result;
+  return response;
 };
+
 const getReviewByCourseIdIntoDB = async (id: string) => {
   const courseId = new mongoose.Types.ObjectId(id);
 
@@ -115,38 +113,30 @@ const getReviewByCourseIdIntoDB = async (id: string) => {
   return result;
 };
 const getBestCorseFromDb = async () => {
-  const minimumAverageRating = 2;
-  const result = await CourseModel.aggregate([
+  const bestCourse = await ReviewModel.aggregate([
+    { $match: {} },
     {
-      $lookup: {
-        from: 'reviews',
-        localField: '_id',
-        foreignField: 'courseId',
-        as: 'reviews',
+      $group: {
+        averageRating: { $avg: '$rating' },
+        reviewCount: { $sum: 1 },
+        _id: '$courseId',
       },
     },
     {
-      $addFields: {
-        averageRating: {
-          $avg: '$reviews.rating',
-        },
+      $sort: {
+        averageRating: -1,
       },
     },
-    {
-      $match: {
-        averageRating: { $gt: minimumAverageRating },
-      },
-    },
-
-    {
-      $addFields: {
-        reviewCount: { $size: '$reviews' },
-      },
-    },
-
-    { $project: { reviews: 0, __v: 0 } },
+    { $limit: 1 },
   ]);
-  return result;
+
+  if (bestCourse && bestCourse.length > 0) {
+    const { averageRating, reviewCount } = bestCourse[0];
+    const courseId = bestCourse[0]._id;
+    const course = await CourseModel.findById(courseId);
+    const result = { course, averageRating, reviewCount };
+    return result;
+  }
 };
 
 const updateCourseIntoDB = async (id: string, payload: Partial<TCourse>) => {
