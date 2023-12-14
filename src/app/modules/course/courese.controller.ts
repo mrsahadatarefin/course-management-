@@ -51,9 +51,9 @@ const getCourseByBestRating = catchAsync(
   },
 );
 const updateCourse = catchAsync(async (req: Request, res: Response) => {
-  const { courseId } = req.params;
+  const { id } = req.params;
   const body = req.body;
-  const result = await courseService.updateCourseIntoDB(courseId, body);
+  const result = await courseService.updateCourseIntoDB(id, body);
   sendResponse(res, {
     statusCode: 200,
     success: true,
