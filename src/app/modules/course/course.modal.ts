@@ -1,40 +1,45 @@
 import { Schema, model } from 'mongoose';
 import { TCourse } from './course.interface';
 
-const courseSchema = new Schema<TCourse>({
-  title: {
-    type: String,
-    unique: true,
-    required: true,
+const courseSchema = new Schema<TCourse>(
+  {
+    title: {
+      type: String,
+      unique: true,
+      required: true,
+    },
+    instructor: {
+      type: String,
+      required: true,
+    },
+    categoryId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Category',
+      required: true,
+    },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    price: {
+      type: Number,
+      required: true,
+    },
+    tags: [{ name: String, isDeleted: Boolean }],
+    startDate: { type: String, required: true },
+    endDate: { type: String, required: true },
+    language: { type: String, required: true },
+    provider: { type: String, required: true },
+    durationInWeeks: { type: Number },
+    details: {
+      level: { type: String, required: true },
+      description: { type: String, required: true },
+    },
   },
-  instructor: {
-    type: String,
-    required: true,
+  {
+    timestamps: true,
   },
-  categoryId: {
-    type: Schema.Types.ObjectId,
-    ref: 'Category',
-    required: true,
-  },
-  createdBy: {
-    type: Schema.Types.ObjectId,
-    ref: 'user',
-  },
-  price: {
-    type: Number,
-    required: true,
-  },
-  tags: [{ name: String, isDeleted: Boolean }],
-  startDate: { type: String, required: true },
-  endDate: { type: String, required: true },
-  language: { type: String, required: true },
-  provider: { type: String, required: true },
-  durationInWeeks: { type: Number },
-  details: {
-    level: { type: String, required: true },
-    description: { type: String, required: true },
-  },
-});
+);
 courseSchema.pre('save', function (next) {
   const startDate = new Date(this.startDate);
   const endDate = new Date(this.endDate);

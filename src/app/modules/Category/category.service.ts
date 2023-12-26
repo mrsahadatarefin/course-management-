@@ -11,7 +11,7 @@ const createCategoryIntoDb = async (userId: JwtPayload, payload: TCategory) => {
   return result;
 };
 const getAllCategoryFromDb = async () => {
-  const result = await CategoryModel.find({});
+  const result = await CategoryModel.find().populate('createdBy');
   return result;
 };
 

@@ -74,7 +74,7 @@ const AllCourseFromDb = async (queryParams: QueryParams) => {
 
   const totalCount = await CourseModel.countDocuments(matchCriteria).exec();
 
-  const query = CourseModel.find(matchCriteria);
+  const query = CourseModel.find(matchCriteria).populate('createdBy');
 
   if (Object.keys(sortCriteria).length > 0) {
     query.sort(sortCriteria);
@@ -138,7 +138,7 @@ const getBestCorseFromDb = async () => {
   if (bestCourse && bestCourse.length > 0) {
     const { averageRating, reviewCount } = bestCourse[0];
     const courseId = bestCourse[0]._id;
-    const course = await CourseModel.findById(courseId);
+    const course = await CourseModel.findById(courseId).populate('createdBy');
     const result = { course, averageRating, reviewCount };
     return result;
   }
