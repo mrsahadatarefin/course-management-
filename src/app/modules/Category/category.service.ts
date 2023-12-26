@@ -1,8 +1,13 @@
+import { JwtPayload } from 'jsonwebtoken';
 import { TCategory } from './category.interface';
 import { CategoryModel } from './category.model';
 
-const createCategoryIntoDb = async (payload: TCategory) => {
-  const result = await CategoryModel.create(payload);
+const createCategoryIntoDb = async (userId: JwtPayload, payload: TCategory) => {
+  const data = {
+    ...payload,
+    createdBy: userId,
+  };
+  const result = await CategoryModel.create(data);
   return result;
 };
 const getAllCategoryFromDb = async () => {

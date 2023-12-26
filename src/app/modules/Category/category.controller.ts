@@ -7,8 +7,10 @@ import { categoryService } from './category.service';
 
 const createCategory = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user.userId;
     const body = req.body;
-    const result = await categoryService.createCategoryIntoDb(body);
+
+    const result = await categoryService.createCategoryIntoDb(userId, body);
     sendResponse(res, {
       statusCode: 201,
       success: true,

@@ -12,6 +12,7 @@ export type TCourse = {
   title: string;
   instructor: string;
   categoryId: Types.ObjectId;
+  createdBy: Types.ObjectId;
   price: number;
   tags: TTags[];
   startDate: string;

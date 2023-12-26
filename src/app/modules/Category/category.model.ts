@@ -7,5 +7,9 @@ const courseSchema = new Schema<TCategory>({
     unique: true,
     required: true,
   },
+  createdBy: {
+    type: Schema.Types.ObjectId,
+    ref: 'user',
+  },
 });
 export const CategoryModel = model<TCategory>('Category', courseSchema);

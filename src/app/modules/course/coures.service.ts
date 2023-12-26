@@ -2,9 +2,14 @@ import mongoose from 'mongoose';
 import { QueryParams, TCourse } from './course.interface';
 import CourseModel from './course.modal';
 import { ReviewModel } from '../Review/review.model';
+import { JwtPayload } from 'jsonwebtoken';
 
-const createCourseIntoDb = async (payload: TCourse) => {
-  const result = await CourseModel.create(payload);
+const createCourseIntoDb = async (userId: JwtPayload, payload: TCourse) => {
+  const userData = {
+    ...payload,
+    createdBy: userId,
+  };
+  const result = await CourseModel.create(userData);
   return result;
 };
 

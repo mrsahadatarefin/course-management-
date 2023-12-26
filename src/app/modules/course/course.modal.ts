@@ -16,6 +16,10 @@ const courseSchema = new Schema<TCourse>({
     ref: 'Category',
     required: true,
   },
+  createdBy: {
+    type: Schema.Types.ObjectId,
+    ref: 'user',
+  },
   price: {
     type: Number,
     required: true,

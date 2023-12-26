@@ -5,9 +5,11 @@ import sendResponse from '../../utils/sendResponse';
 import { courseService } from './coures.service';
 
 const createCourse = catchAsync(async (req: Request, res: Response) => {
+  const user = req.user.userId;
+
   const body = req.body;
 
-  const result = await courseService.createCourseIntoDb(body);
+  const result = await courseService.createCourseIntoDb(user, body);
   sendResponse(res, {
     statusCode: 201,
     success: true,
