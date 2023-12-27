@@ -23,12 +23,25 @@ const UserSchema = new Schema<TUser>(
       enum: ['user', 'admin'],
       default: 'user',
     },
+    passwordChangeHistory: [
+      {
+        password: {
+          type: String,
+          required: true,
+        },
+        timestamp: {
+          type: Date,
+          required: true,
+        },
+      },
+    ],
   },
   {
     timestamps: true,
     toJSON: {
       transform: (doc, ret) => {
         delete ret.password;
+        delete ret.passwordChangeHistory;
         return ret;
       },
     },

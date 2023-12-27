@@ -5,6 +5,10 @@ export type TUser = {
   email: string;
   password: string;
   role: 'user' | 'admin';
+  passwordChangeHistory?: Array<{
+    password: string;
+    timestamp: Date;
+  }>;
 };
 export type TLoginUser = {
   username: string;

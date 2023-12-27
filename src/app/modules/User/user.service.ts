@@ -47,7 +47,59 @@ const loginUserIntoDB = async (payload: TLoginUser) => {
   };
 };
 
+const changePasswordIntoDB = async (
+  userData: JwtPayload,
+  payload: { currentPassword: string; newPassword: string },
+) => {
+  const user = await UserModel.findOne({
+    _id: userData.userId,
+  }).select('+password');
+
+  if (!user) {
+    throw new Error('user is not found !');
+  }
+  const isPasswordCorrect = await bcrypt.compare(
+    payload.currentPassword,
+    user.password,
+  );
+
+  if (!isPasswordCorrect) {
+    throw new Error('password is not correct !');
+  }
+
+  const previousPasswords = user.passwordChangeHistory || [];
+  const isPasswordReused = previousPasswords.some((prevPassword) =>
+    bcrypt.compareSync(payload.newPassword, prevPassword.password),
+  );
+
+  if (isPasswordReused) {
+    throw new Error(
+      'Password change failed. Ensure the new password is unique and not among the last 2 used (last used on 2023-01-01 at 12:00 PM).',
+    );
+  }
+
+  const hashedNewPassword = await bcrypt.hash(payload.newPassword, 10);
+  const newPasswordChange = {
+    password: hashedNewPassword,
+    timestamp: new Date(),
+  };
+  user.passwordChangeHistory = [
+    newPasswordChange,
+    ...previousPasswords.slice(0, 1),
+  ];
+  const result = await UserModel.findByIdAndUpdate(
+    userData.userId,
+    {
+      password: hashedNewPassword,
+      passwordChangeHistory: user.passwordChangeHistory,
+    },
+    { new: true },
+  );
+  return result;
+};
+
 export const userService = {
   createUserIntoDB,
   loginUserIntoDB,
+  changePasswordIntoDB,
 };

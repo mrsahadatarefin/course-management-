@@ -20,6 +20,7 @@ route.get('/best', courseController.getCourseByBestRating);
 route.get('/:courseId/reviews', courseController.getReviewByCourseId);
 route.put(
   '/:courseId',
+  auth(User_Role.admin),
   validateRequest(updateCourseValidationSchema),
   courseController.updateCourse,
 );

@@ -22,5 +22,17 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+const changePassword = catchAsync(async (req: Request, res: Response) => {
+  const user = req.user;
 
-export const userController = { createUser, loginUser };
+  const { ...passwordData } = req.body;
+  const result = await userService.changePasswordIntoDB(user, passwordData);
+  sendResponse(res, {
+    statusCode: 201,
+    success: true,
+    message: 'User registered successfully',
+    data: result,
+  });
+});
+
+export const userController = { createUser, loginUser, changePassword };
