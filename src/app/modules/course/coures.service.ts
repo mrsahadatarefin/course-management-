@@ -100,17 +100,84 @@ const AllCourseFromDb = async (queryParams: QueryParams) => {
 const getReviewByCourseIdIntoDB = async (id: string) => {
   const courseId = new mongoose.Types.ObjectId(id);
 
+  // const result = await CourseModel.aggregate([
+  //   {
+  //     $match: { _id: courseId },
+  //   },
+
+  //   {
+  //     $lookup: {
+  //       from: 'reviews',
+  //       localField: '_id',
+  //       foreignField: 'courseId',
+  //       as: 'reviews',
+  //     },
+  //   },
+  // ]);
+
   const result = await CourseModel.aggregate([
     {
       $match: { _id: courseId },
     },
-
     {
       $lookup: {
         from: 'reviews',
         localField: '_id',
         foreignField: 'courseId',
         as: 'reviews',
+      },
+    },
+
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'createdBy',
+        foreignField: '_id',
+        as: 'createdBy',
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        title: 1,
+        instructor: 1,
+        categoryId: 1,
+        createdBy: {
+          $cond: {
+            if: { $eq: ['$createdBy', []] },
+            then: null,
+            else: {
+              $arrayElemAt: ['$createdBy', 0],
+            },
+          },
+        },
+        price: 1,
+        tags: 1,
+        startDate: 1,
+        endDate: 1,
+        language: 1,
+        provider: 1,
+        details: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        durationInWeeks: 1,
+        reviews: {
+          $map: {
+            input: '$reviews',
+            as: 'review',
+            in: {
+              _id: '$$review._id',
+              courseId: '$$review.courseId',
+              rating: '$$review.rating',
+              review: '$$review.review',
+              createdBy: {
+                $arrayElemAt: ['$createdBy', 0],
+              },
+              createdAt: '$$review.createdAt',
+              updatedAt: '$$review.updatedAt',
+            },
+          },
+        },
       },
     },
   ]);

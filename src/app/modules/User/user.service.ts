@@ -30,7 +30,7 @@ const loginUserIntoDB = async (payload: TLoginUser) => {
     payload.password,
     user.password,
   );
-  console.log(user);
+
   if (!isPasswordCorrect) {
     throw new Error('password is not correct !');
   }
@@ -74,7 +74,7 @@ const changePasswordIntoDB = async (
 
   if (isPasswordReused) {
     throw new Error(
-      'Password change failed. Ensure the new password is unique and not among the last 2 used (last used on 2023-01-01 at 12:00 PM).',
+      'Password change failed. Ensure the new password is unique and not among the last 2 used ',
     );
   }
 
