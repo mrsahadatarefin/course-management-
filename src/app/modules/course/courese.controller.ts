@@ -32,6 +32,7 @@ const AllCourse = catchAsync(async (req: Request, res: Response) => {
 });
 const getReviewByCourseId = catchAsync(async (req: Request, res: Response) => {
   const { courseId } = req.params;
+  console.log(courseId);
   const result = await courseService.getReviewByCourseIdIntoDB(courseId);
   sendResponse(res, {
     statusCode: 200,
