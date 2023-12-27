@@ -100,21 +100,6 @@ const AllCourseFromDb = async (queryParams: QueryParams) => {
 const getReviewByCourseIdIntoDB = async (id: string) => {
   const courseId = new mongoose.Types.ObjectId(id);
 
-  // const result = await CourseModel.aggregate([
-  //   {
-  //     $match: { _id: courseId },
-  //   },
-
-  //   {
-  //     $lookup: {
-  //       from: 'reviews',
-  //       localField: '_id',
-  //       foreignField: 'courseId',
-  //       as: 'reviews',
-  //     },
-  //   },
-  // ]);
-
   const result = await CourseModel.aggregate([
     {
       $match: { _id: courseId },
